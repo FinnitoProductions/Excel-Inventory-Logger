@@ -1,9 +1,27 @@
+Const ORIGIN_WORKBOOK_NAME As String = "harker inventory.xlsm"
+
+Const SKU_COLUMN As Integer = 1
+Const LOCATION_LETTER_COLUMN As Integer = 5
+Const LOCATION_NUM_COLUMN As Integer = 6
+
+Public Type Map
+    keyset As Collection
+    keyValPairs As Collection
+End Type
+
+Function validateWorkbook()
+    If ActiveWorkbook.Name <> ORIGIN_WORKBOOK_NAME Then
+        MsgBox ("This macro must be executed from " & ORIGIN_WORKBOOK_NAME & ". Please re-open.")
+        'End
+    End If
+End Function
+
 Function SaveBeforeExecute()
     Select Case MsgBox("You can't undo this. Save workbook first?", vbYesNoCancel)
     Case Is = vbYes
         ThisWorkbook.Save
     Case Is = vbCancel
-        End
+        End ' Terminates program execution
     End Select
 End Function
 
@@ -35,6 +53,7 @@ Function collectionContains(desiredVal As String, values As Collection) As Boole
     collectionContains = False
 End Function
 
+' Determines whether a given string represents a valid size (either XS, S, M, L, XL, or XXL).
 Function isSize(potentialSize As String) As Boolean
     Dim validSizes As Collection
     Dim sizeArray As Variant
@@ -42,14 +61,14 @@ Function isSize(potentialSize As String) As Boolean
     Set validSizes = arrToCollection(Array("XS", "S", "M", "L", "XL", "XXL"))
     
     isSize = collectionContains(potentialSize, validSizes)
-    Debug.Print ("Checking " & potentialSize & " " & isSize)
 End Function
 
+' Determines whether a given string represents a SKU which can be shipped.
 Function isSku(potentialSku As String) As Boolean
     Dim splitString() As String
     Const MAX_SKU_TOKENS As Integer = 2
     Dim arrLength As Integer
-    
+
     splitString = Split(potentialSku, " ")
     arrLength = UBound(splitString) + 1
     
@@ -64,25 +83,11 @@ Function isSku(potentialSku As String) As Boolean
     End If
 End Function
 
-Sub FindDesiredValues()
-    'Call SaveBeforeExecute
-    Const ORIGIN_WORKBOOK_NAME As String = "harker inventory.xlsm"
-    If ActiveWorkbook.Name <> ORIGIN_WORKBOOK_NAME Then
-        MsgBox ("This macro must be executed from " & ORIGIN_WORKBOOK_NAME & ". Please re-open.")
-        'Exit Sub
-    End If
-    
-    Application.ScreenUpdating = False 'Prevent new window from displaying
-    
-    Dim fileName As Variant
-    Dim stringFilePath As String
-    Dim strippedFileName As String
+Function generateSkuDictionary() As Map
+    Dim desiredMap As Map
+
     Dim skus As New Collection
     Dim skuKeyset As New Collection
-    
-    Const SKU_COLUMN As Integer = 1
-    Const LOCATION_LETTER_COLUMN As Integer = 5
-    Const LOCATION_NUM_COLUMN As Integer = 6
     
     For i = 2 To Rows.Count
         Dim skuVal As String
@@ -95,22 +100,41 @@ Sub FindDesiredValues()
             Call skuKeyset.Add(skuVal)
         End If
     Next
-    
-    
-   fileName = Application.GetOpenFilename()
 
-   If fileName <> False Then
-       Workbooks.Open (fileName)
-       stringFilePath = CStr(fileName)
-   Else
-       While fileName = False
-           fileName = Application.GetOpenFilename()
-       Wend
-   End If
+    Set desiredMap.keyset = skuKeyset
+    Set desiredMap.keyValPairs = skus
+    generateSkuDictionary = desiredMap
+End Function
 
-   strippedFileName = getWorksheetFromPath(stringFilePath)
-   Workbooks(strippedFileName).Activate
-'
+Sub FindDesiredValues()
+    'Call SaveBeforeExecute
+    Call validateWorkbook
+    Application.ScreenUpdating = False 'Prevent new window from displaying
+    
+    Dim fileName As Variant
+    Dim stringFilePath As String
+    Dim strippedFileName As String
+    Dim desiredMap As Map
+    
+    desiredMap = generateSkuDictionary()
+    
+    For Each Key In desiredMap.keyset
+        Debug.Print (desiredMap.keyValPairs(Key))
+    Next
+    
+    ' fileName = Application.GetOpenFilename()
+
+    ' If fileName <> False Then
+    '     Workbooks.Open (fileName)
+    '     stringFilePath = CStr(fileName)
+    ' Else
+    '     While fileName = False
+    '         fileName = Application.GetOpenFilename()
+    '     Wend
+    ' End If
+
+    ' strippedFileName = getWorksheetFromPath(stringFilePath)
+    ' Workbooks(strippedFileName).Activate
+
     Workbooks(ORIGIN_WORKBOOK_NAME).Activate 'Reset after each execution
-    Debug.Print (isSku("HK6010SC-5"))
 End Sub
