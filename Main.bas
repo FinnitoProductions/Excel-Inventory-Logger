@@ -1,9 +1,14 @@
 Const ORIGIN_WORKBOOK_NAME As String = "harker inventory.xlsm"
 Const ORIGIN_WORKSHEET_NAME As String = "Inventory"
 
-Const SKU_COLUMN As Integer = 1
-Const LOCATION_LETTER_COLUMN As Integer = 5
-Const LOCATION_NUM_COLUMN As Integer = 6
+Const ORIGIN_SKU_COLUMN As Integer = 1
+Const ORIGIN_LOCATION_LETTER_COLUMN As Integer = 5
+Const ORIGIN_LOCATION_NUM_COLUMN As Integer = 6
+
+Const ORDER_BOX_LABEL_COLUMN As Integer = 1
+Const ORDER_SKU_COLUMN As Integer = 2
+Const ORDER_COUNT_COLUMN As Integer = 3
+
 Dim orderFile As String
 Dim orderWorksheet As String
 
@@ -24,7 +29,7 @@ Function validateWorkbook()
     End If
 End Function
 
-' Offers to save the workbook before the macro is executed to allow the macro's actions to be easily undone (Excel does not 
+' Offers to save the workbook before the macro is executed to allow the macro's actions to be easily undone (Excel does not
 ' support native undoing of Macro actions).
 Function SaveBeforeExecute()
     Select Case MsgBox("You can't undo this. Save workbook first?", vbYesNoCancel)
@@ -47,23 +52,36 @@ End Function
 Function arrToCollection(initArr As Variant) As Collection
     Dim desiredCollection As New Collection
     
-    For Each Value In initArr
-        desiredCollection.Add Value
-    Next Value
+    For Each value In initArr
+        desiredCollection.Add value
+    Next value
     
     Set arrToCollection = desiredCollection
 End Function
 
 ' Determines whether a collection (values) contains a given value (desiredVal).
 Function collectionContains(desiredVal As String, values As Collection) As Boolean
-    For Each Value In values
-        If Value = desiredVal Then
+    For Each value In values
+        If value = desiredVal Then
             collectionContains = True
             Exit Function
         End If
-    Next Value
+    Next value
 
     collectionContains = False
+End Function
+' Determines whether a collection (values) contains a given key (desiredVal).
+Function collectionContainsKey(desiredKey As String, values As Collection) As Boolean
+    Dim var As Variant
+    On Error Resume Next
+    var = values(desiredKey)
+    collectionContainsKey = (Err.Number = 0)
+    Err.Clear
+End Function
+Function updateCollectionKey(desiredKey As String, newValue As Variant, values As Collection) As Collection
+    Call values.Remove(desiredKey)
+    Call values.Add(Item:=newValue, Key:=desiredKey)
+    Set updateCollectionKey = values
 End Function
 
 ' Determines whether a given string represents a valid size (either XS, S, M, L, XL, or XXL).
@@ -106,11 +124,11 @@ Function generateSkuDictionary() As Map
     
     For i = 2 To Rows.Count
         Dim skuVal As String
-        skuVal = CStr(Cells(i, SKU_COLUMN).Value)
+        skuVal = CStr(Cells(i, ORIGIN_SKU_COLUMN).value)
         If skuVal <> "" Then
             Dim location As String
             With Workbooks(ORIGIN_WORKBOOK_NAME).Worksheets(ORIGIN_WORKSHEET_NAME)
-                location = CStr(.Cells(i, LOCATION_LETTER_COLUMN).Value) & CStr(.Cells(i, LOCATION_NUM_COLUMN).Value)
+                location = CStr(.Cells(i, ORIGIN_LOCATION_LETTER_COLUMN).value) & CStr(.Cells(i, ORIGIN_LOCATION_NUM_COLUMN).value)
             End With
 
             Call skus.Add(Item:=location, Key:=skuVal)
@@ -147,7 +165,43 @@ Function openDesiredFile() As String
 End Function
 
 Function retrieveOrder() As Map
+    Dim mapKeyset As Collection: Set mapKeyset = New Collection
+    Dim mapKeyValues As Collection: Set mapKeyValues = New Collection
+    Dim returnVal As Map
+
+    With Workbooks(orderFile).Worksheets(orderWorksheet)
+        Dim prevBoxLabel As String: prevBoxLabel = ""
+        For i = 2 To .Rows.Count
+            Dim boxLabel As String: boxLabel = CStr(.Cells(i, ORDER_BOX_LABEL_COLUMN).value)
+            If boxLabel <> "" Then
+                Debug.Print (boxLabel)
+                Call mapKeyset.Add(boxLabel)
+                
+                Dim storedCollection As Collection: Set storedCollection = New Collection
+                Call mapKeyValues.Add(Item:=storedCollection, Key:=boxLabel)
+
+                prevBoxLabel = boxLabel
+            End If
+
+            Dim correspondingSku As String: correspondingSku = CStr(.Cells(i, ORDER_SKU_COLUMN).value)
+            Dim correspondingCount As Integer: correspondingCount = CInt(.Cells(i, ORDER_COUNT_COLUMN).value)
+            If correspondingSku <> "" Then
+                If Not collectionContainsKey(correspondingSku, mapKeyValues(prevBoxLabel)) Then
+                    Call mapKeyValues(prevBoxLabel).Add(Item:=correspondingCount, Key:=correspondingSku)
+                Else
+                    Debug.Print ("Duplicate key found")
+                    
+                    Call updateCollectionKey(correspondingSku, correspondingCount, mapKeyValues(prevBoxLabel))
+                End If
+                Debug.Print (correspondingSku & ", " & correspondingCount)
+            End If
+
+        Next
+    End With
     
+    returnVal.keyset = mapKeyset
+    returnVal.keyValuePairs = mapKeyValues
+    retrieveOrder = returnVal
 End Function
 
 Sub FindDesiredValues()
@@ -165,6 +219,10 @@ Sub FindDesiredValues()
     orderFile = openDesiredFile()
     orderWorksheet = Workbooks(orderFile).Sheets(1).Name
 
+    Call retrieveOrder
+
     Workbooks(ORIGIN_WORKBOOK_NAME).Activate 'Reset after each execution
 End Sub
+
+
 
