@@ -14,6 +14,13 @@ Function getWorksheetFromPath(path As String) As String
     getWorksheetFromPath = splitString(UBound(splitString))
 End Function
 Sub FindDesiredValues()
+    Const ORIGIN_WORKBOOK_NAME As String = "harker inventory.xlsm"
+    If ActiveWorkbook.Name <> ORIGIN_WORKBOOK_NAME Then
+        MsgBox ("This macro must be executed from " & ORIGIN_WORKBOOK_NAME & ". Please re-open.")
+        Exit Sub
+    End If
+    
+    Debug.Print ActiveWorkbook.Name
     Application.ScreenUpdating = False 'Prevent new window from displaying
     
     Dim fileName As Variant
@@ -39,6 +46,8 @@ Sub FindDesiredValues()
     For Each Value In Range("A1:A3")
         Debug.Print (Value)
     Next Value
+    
+    Workbooks(ORIGIN_WORKBOOK_NAME).Activate 'Reset after each execution
 End Sub
 
 
