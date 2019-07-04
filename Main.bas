@@ -96,7 +96,9 @@ Function generateSkuDictionary() As Map
         skuVal = CStr(Cells(i, SKU_COLUMN).Value)
         If skuVal <> "" Then
             Dim location As String
-            location = CStr(Cells(i, LOCATION_LETTER_COLUMN).Value) & CStr(Cells(i, LOCATION_NUM_COLUMN).Value)
+            With Workbooks(ORIGIN_WORKBOOK_NAME).Worksheets(ORIGIN_WORKSHEET_NAME)
+                location = CStr(.Cells(i, LOCATION_LETTER_COLUMN).Value) & CStr(.Cells(i, LOCATION_NUM_COLUMN).Value)
+            End With
 
             Call skus.Add(location, skuVal)
             Call skuKeyset.Add(skuVal)
