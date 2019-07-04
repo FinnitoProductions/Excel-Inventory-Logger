@@ -101,7 +101,7 @@ Function generateSkuDictionary() As Map
                 location = CStr(.Cells(i, LOCATION_LETTER_COLUMN).Value) & CStr(.Cells(i, LOCATION_NUM_COLUMN).Value)
             End With
 
-            Call skus.Add(location, skuVal)
+            Call skus.Add(Item:=location, Key:=skuVal)
             Call skuKeyset.Add(skuVal)
         End If
     Next
