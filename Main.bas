@@ -5,6 +5,7 @@ Const SKU_COLUMN As Integer = 1
 Const LOCATION_LETTER_COLUMN As Integer = 5
 Const LOCATION_NUM_COLUMN As Integer = 6
 Dim orderFile As String
+Dim orderWorksheet As String
 
 Public Type Map
     keyset As Collection
@@ -133,7 +134,7 @@ Function openDesiredFile() As String
 End Function
 
 Function retrieveOrder() As Map
-
+    
 End Function
 
 Sub FindDesiredValues()
@@ -149,7 +150,8 @@ Sub FindDesiredValues()
     Next
 
     orderFile = openDesiredFile()
-    
+    orderWorksheet = Workbooks(orderFile).Sheets(1).Name
+
     Workbooks(ORIGIN_WORKBOOK_NAME).Activate 'Reset after each execution
 End Sub
 
