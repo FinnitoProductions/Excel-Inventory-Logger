@@ -1,8 +1,10 @@
 Const ORIGIN_WORKBOOK_NAME As String = "harker inventory.xlsm"
+Const ORIGIN_WORKSHEET_NAME As String = "Inventory"
 
 Const SKU_COLUMN As Integer = 1
 Const LOCATION_LETTER_COLUMN As Integer = 5
 Const LOCATION_NUM_COLUMN As Integer = 6
+Dim orderFile As String
 
 Public Type Map
     keyset As Collection
@@ -106,35 +108,46 @@ Function generateSkuDictionary() As Map
     generateSkuDictionary = desiredMap
 End Function
 
+Function openDesiredFile() As String
+    Dim fileName As Variant
+    Dim stringFilePath As String
+    Dim strippedFileName As String
+    
+    fileName = Application.GetOpenFilename()
+
+    If fileName <> False Then
+        Workbooks.Open (fileName)
+        stringFilePath = CStr(fileName)
+    Else
+        While fileName = False
+            fileName = Application.GetOpenFilename()
+        Wend
+    End If
+
+    strippedFileName = getWorksheetFromPath(stringFilePath)
+    Workbooks(strippedFileName).Activate
+
+    openDesiredFile = strippedFileName
+End Function
+
+Function retrieveOrder() As Map
+
+End Function
+
 Sub FindDesiredValues()
     'Call SaveBeforeExecute
     Call validateWorkbook
     Application.ScreenUpdating = False 'Prevent new window from displaying
     
-    Dim fileName As Variant
-    Dim stringFilePath As String
-    Dim strippedFileName As String
     Dim desiredMap As Map
-    
     desiredMap = generateSkuDictionary()
     
     For Each Key In desiredMap.keyset
         Debug.Print (desiredMap.keyValPairs(Key))
     Next
+
+    orderFile = openDesiredFile()
     
-    ' fileName = Application.GetOpenFilename()
-
-    ' If fileName <> False Then
-    '     Workbooks.Open (fileName)
-    '     stringFilePath = CStr(fileName)
-    ' Else
-    '     While fileName = False
-    '         fileName = Application.GetOpenFilename()
-    '     Wend
-    ' End If
-
-    ' strippedFileName = getWorksheetFromPath(stringFilePath)
-    ' Workbooks(strippedFileName).Activate
-
     Workbooks(ORIGIN_WORKBOOK_NAME).Activate 'Reset after each execution
 End Sub
+
