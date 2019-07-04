@@ -1,4 +1,3 @@
-Attribute VB_Name = "Main"
 Function SaveBeforeExecute()
     Select Case MsgBox("You can't undo this. Save workbook first?", vbYesNoCancel)
     Case Is = vbYes
@@ -7,12 +6,64 @@ Function SaveBeforeExecute()
         End
     End Select
 End Function
+
 Function getWorksheetFromPath(path As String) As String
     Dim splitString() As String
     splitString = Split(path, "/")
     
     getWorksheetFromPath = splitString(UBound(splitString))
 End Function
+
+Function arrToCollection(initArr As Variant) As Collection
+    Dim desiredCollection As New Collection
+    
+    For Each Value In initArr
+        desiredCollection.Add Value
+    Next Value
+    
+    Set arrToCollection = desiredCollection
+End Function
+
+Function collectionContains(desiredVal As String, values As Collection) As Boolean
+    For Each Value In values
+        If Value = desiredVal Then
+            collectionContains = True
+            Exit Function
+        End If
+    Next Value
+
+    collectionContains = False
+End Function
+
+Function isSize(potentialSize As String) As Boolean
+    Dim validSizes As Collection
+    Dim sizeArray As Variant
+    
+    Set validSizes = arrToCollection(Array("XS", "S", "M", "L", "XL", "XXL"))
+    
+    isSize = collectionContains(potentialSize, validSizes)
+    Debug.Print ("Checking " & potentialSize & " " & isSize)
+End Function
+
+Function isSku(potentialSku As String) As Boolean
+    Dim splitString() As String
+    Const MAX_SKU_TOKENS As Integer = 2
+    Dim arrLength As Integer
+    
+    splitString = Split(potentialSku, " ")
+    arrLength = UBound(splitString) + 1
+    
+    If arrLength > MAX_SKU_TOKENS Then
+        isSku = False
+        Exit Function
+    ElseIf arrLength = MAX_SKU_TOKENS Then
+        Debug.Print (TypeName(splitString(UBound(splitString))))
+        isSku = isSize(splitString(UBound(splitString)))
+    Else
+        isSku = True
+    End If
+End Function
+
 Sub FindDesiredValues()
     'Call SaveBeforeExecute
     Const ORIGIN_WORKBOOK_NAME As String = "harker inventory.xlsm"
@@ -45,25 +96,21 @@ Sub FindDesiredValues()
         End If
     Next
     
-    For Each sku In skuKeyset
-        Debug.Print (sku & " " & skus(sku))
-    Next sku
     
-    fileName = Application.GetOpenFilename()
+   fileName = Application.GetOpenFilename()
 
-    If fileName <> False Then
-        Workbooks.Open (fileName)
-        stringFilePath = CStr(fileName)
-    Else
-        While fileName = False
-            fileName = Application.GetOpenFilename()
-        Wend
-    End If
+   If fileName <> False Then
+       Workbooks.Open (fileName)
+       stringFilePath = CStr(fileName)
+   Else
+       While fileName = False
+           fileName = Application.GetOpenFilename()
+       Wend
+   End If
 
-    strippedFileName = getWorksheetFromPath(stringFilePath)
-    Workbooks(strippedFileName).Activate
-    
+   strippedFileName = getWorksheetFromPath(stringFilePath)
+   Workbooks(strippedFileName).Activate
+'
     Workbooks(ORIGIN_WORKBOOK_NAME).Activate 'Reset after each execution
+    Debug.Print (isSku("HK6010SC-5"))
 End Sub
-
-
