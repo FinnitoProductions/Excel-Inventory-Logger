@@ -69,19 +69,6 @@ Function collectionContains(desiredVal As String, values As Collection) As Boole
 
     collectionContains = False
 End Function
-' Determines whether a collection (values) contains a given key (desiredVal).
-Function collectionContainsKey(desiredKey As String, values As Collection) As Boolean
-    Dim var As Variant
-    On Error Resume Next
-    var = values(desiredKey)
-    collectionContainsKey = (Err.Number = 0)
-    Err.Clear
-End Function
-Function updateCollectionKey(desiredKey As String, newValue As Variant, values As Collection) As Collection
-    Call values.remove(desiredKey)
-    Call values.add(Item:=newValue, key:=desiredKey)
-    Set updateCollectionKey = values
-End Function
 
 ' Determines whether a given string represents a valid size (either XS, S, M, L, XL, or XXL).
 Function isSize(potentialSize As String) As Boolean
