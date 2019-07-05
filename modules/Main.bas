@@ -15,12 +15,18 @@ Dim orderWorksheet As String
 
 ' If this macro isn't being run from the master inventory workbook, warns the user to change the active workbook
 ' before reexcuting the code and terminates the program.
-Function validateWorkbook()
-    If ActiveWorkbook.Name <> ORIGIN_WORKBOOK_NAME Then
-        MsgBox ("This macro must be executed from " & ORIGIN_WORKBOOK_NAME & ". Please re-open.")
+Sub validateWorkbook()
+    With Application.Workbooks
+        For i = 1 To .Count
+            If .Item(i).Name = ORIGIN_WORKBOOK_NAME Then
+                Debug.Print ("validated")
+                Exit Sub
+            End If
+        Next
+        MsgBox ("This macro must be executed with " & ORIGIN_WORKBOOK_NAME & " open. Please re-open.")
         'End
-    End If
-End Function
+    End With
+End Sub
 
 ' Offers to save the workbook before the macro is executed to allow the macro's actions to be easily undone (Excel does not
 ' support native undoing of Macro actions).
@@ -146,7 +152,6 @@ Function openDesiredFile() As String
     End If
 
     strippedFileName = getWorksheetFromPath(stringFilePath)
-    Workbooks(strippedFileName).Activate
 
     openDesiredFile = strippedFileName
 End Function
@@ -186,8 +191,8 @@ Sub FindDesiredValues()
     Call validateWorkbook
     Application.ScreenUpdating = False 'Prevent new window from displaying
 
-    Dim desiredMap As Map
-    Set desiredMap = generateSkuDictionary()
+    Dim baseInventory As Map
+    Set baseInventory = generateSkuDictionary()
 
     For Each key In desiredMap.keyset
         Debug.Print (desiredMap.retrieve(key))
@@ -196,9 +201,8 @@ Sub FindDesiredValues()
     orderFile = openDesiredFile()
     orderWorksheet = Workbooks(orderFile).Sheets(1).Name
 
-    Call retrieveOrder
-
-    Workbooks(ORIGIN_WORKBOOK_NAME).Activate 'Reset after each execution
+    Dim desiredGoods As Map
+    desiredGoods = retrieveOrder()
 End Sub
 
 
