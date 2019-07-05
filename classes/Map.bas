@@ -6,7 +6,7 @@ Public keyset As New Collection
 Public keyValPairs As New Collection
 
 Public Function retrieve(ByVal key As String) As Variant
-    retrieve = keyValPairs(key)
+    Set retrieve = keyValPairs(key)
 End Function
 
 Private Function getKeysetIndex(ByVal key As String) As Integer
