@@ -5,14 +5,16 @@
 Public keyset As New Collection
 Public keyValPairs As New Collection
 
+Public Function size() As Integer
+    size = keyset.Count
+End Function
+
 Public Function retrieve(ByVal key As String) As Variant
-    'Debug.Print ("starting")
     If IsObject(keyValPairs(key)) Then
         Set retrieve = keyValPairs(key)
     Else
         retrieve = keyValPairs(key)
     End If
-    'Debug.Print ("key")
 End Function
 
 Private Function getKeysetIndex(ByVal key As String) As Integer
