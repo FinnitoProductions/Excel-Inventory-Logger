@@ -152,43 +152,33 @@ Function openDesiredFile() As String
 End Function
 
 Function retrieveOrder() As Map
-    Dim mapKeyset As Collection: Set mapKeyset = New Collection
-    Dim mapKeyValues As Collection: Set mapKeyValues = New Collection
-    Dim returnVal As Map
+    Dim returnVal As New Map
 
     With Workbooks(orderFile).Worksheets(orderWorksheet)
         Dim prevBoxLabel As String: prevBoxLabel = ""
         For i = 2 To .Rows.Count
             Dim boxLabel As String: boxLabel = CStr(.Cells(i, ORDER_BOX_LABEL_COLUMN).value)
             If boxLabel <> "" Then
-                Debug.Print (boxLabel)
-                Call mapKeyset.add(boxLabel)
-                
-                Dim storedCollection As Collection: Set storedCollection = New Collection
-                Call mapKeyValues.add(Item:=storedCollection, key:=boxLabel)
-
+                Dim storedMap As Map: Set storedMap = New Map
+                Call returnVal.add(boxLabel, storedMap)
                 prevBoxLabel = boxLabel
             End If
 
             Dim correspondingSku As String: correspondingSku = CStr(.Cells(i, ORDER_SKU_COLUMN).value)
             Dim correspondingCount As Integer: correspondingCount = CInt(.Cells(i, ORDER_COUNT_COLUMN).value)
             If correspondingSku <> "" Then
-                If Not collectionContainsKey(correspondingSku, mapKeyValues(prevBoxLabel)) Then
-                    Call mapKeyValues(prevBoxLabel).add(Item:=correspondingCount, key:=correspondingSku)
-                Else
-                    Debug.Print ("Duplicate key found")
-                    
-                    Call updateCollectionKey(correspondingSku, correspondingCount, mapKeyValues(prevBoxLabel))
-                End If
+                Debug.Print (returnVal.contains(prevBoxLabel))
+                'Dim retrievedMap As Variant: Set retrievedMap = returnVal.retrieve(prevBoxLabel)
+                Call returnVal.retrieve(prevBoxLabel)
+                'Debug.Print ("type " & TypeName(retrievedMap))
+                'Call retrievedMap.add(correspondingSku, correspondingCount)
                 Debug.Print (correspondingSku & ", " & correspondingCount)
             End If
 
         Next
     End With
-    
-    returnVal.keyset = mapKeyset
-    returnVal.keyValuePairs = mapKeyValues
-    retrieveOrder = returnVal
+
+    Set retrieveOrder = returnVal
 End Function
 
 Sub FindDesiredValues()
@@ -203,13 +193,14 @@ Sub FindDesiredValues()
         Debug.Print (desiredMap.retrieve(key))
     Next
 
-    'orderFile = openDesiredFile()
-    'orderWorksheet = Workbooks(orderFile).Sheets(1).Name
+    orderFile = openDesiredFile()
+    orderWorksheet = Workbooks(orderFile).Sheets(1).Name
 
-    'Call retrieveOrder
+    Call retrieveOrder
 
     Workbooks(ORIGIN_WORKBOOK_NAME).Activate 'Reset after each execution
 End Sub
+
 
 
 
