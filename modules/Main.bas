@@ -157,10 +157,12 @@ Function retrieveOrder() As Map
             End If
 
             Dim correspondingSku As String: correspondingSku = CStr(.Cells(i, ORDER_SKU_COLUMN).value)
-            Dim correspondingCount As Integer: correspondingCount = CInt(.Cells(i, ORDER_COUNT_COLUMN).value)
-            If correspondingSku <> "" Then
-                Call returnVal.retrieve(prevBoxLabel).add(correspondingSku, correspondingCount)
-                Debug.Print (correspondingSku & ", " & correspondingCount)
+            Dim strCorrespondingCount As String: strCorrespondingCount = CStr(.Cells(i, ORDER_COUNT_COLUMN).value)
+            If correspondingSku <> "" And strCorrespondingCount <> "" Then
+                Debug.Print (strCorrespondingCount)
+                Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
+                Call returnVal.retrieve(prevBoxLabel).add(correspondingSku, intCorrespondingCount)
+                Debug.Print (correspondingSku & ", " & intCorrespondingCount)
             End If
 
         Next
@@ -187,3 +189,8 @@ Sub FindDesiredValues()
     Dim desiredGoods As Map
     Set desiredGoods = retrieveOrder()
 End Sub
+
+
+
+
+
