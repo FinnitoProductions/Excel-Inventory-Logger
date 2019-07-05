@@ -12,13 +12,6 @@ Const ORDER_COUNT_COLUMN As Integer = 3
 Dim orderFile As String
 Dim orderWorksheet As String
 
-' Simulates a map/dictionary expected of most languages. Although Collections support the addition of key-value pairs,
-' the list of keys cannot be iterated over (only the values), so keeps track of a separate keyset for convenient key-value
-' iteration.
-Public Type Map
-    keyset As Collection
-    keyValPairs As Collection
-End Type
 
 ' If this macro isn't being run from the master inventory workbook, warns the user to change the active workbook
 ' before reexcuting the code and terminates the program.
@@ -53,7 +46,7 @@ Function arrToCollection(initArr As Variant) As Collection
     Dim desiredCollection As New Collection
     
     For Each value In initArr
-        desiredCollection.Add value
+        desiredCollection.add value
     Next value
     
     Set arrToCollection = desiredCollection
@@ -79,8 +72,8 @@ Function collectionContainsKey(desiredKey As String, values As Collection) As Bo
     Err.Clear
 End Function
 Function updateCollectionKey(desiredKey As String, newValue As Variant, values As Collection) As Collection
-    Call values.Remove(desiredKey)
-    Call values.Add(Item:=newValue, Key:=desiredKey)
+    Call values.remove(desiredKey)
+    Call values.add(Item:=newValue, key:=desiredKey)
     Set updateCollectionKey = values
 End Function
 
@@ -117,10 +110,7 @@ End Function
 ' Iterates over the origin spreadsheet to produce a dictionary containing all SKUs currently in inventory corresponding to
 ' its location in storage.
 Function generateSkuDictionary() As Map
-    Dim desiredMap As Map
-
-    Dim skus As New Collection
-    Dim skuKeyset As New Collection
+    Dim skus As New Map
     
     For i = 2 To Rows.Count
         Dim skuVal As String
@@ -131,14 +121,11 @@ Function generateSkuDictionary() As Map
                 location = CStr(.Cells(i, ORIGIN_LOCATION_LETTER_COLUMN).value) & CStr(.Cells(i, ORIGIN_LOCATION_NUM_COLUMN).value)
             End With
 
-            Call skus.Add(Item:=location, Key:=skuVal)
-            Call skuKeyset.Add(skuVal)
+            Call skus.add(skuVal, location)
         End If
     Next
 
-    Set desiredMap.keyset = skuKeyset
-    Set desiredMap.keyValPairs = skus
-    generateSkuDictionary = desiredMap
+    Set generateSkuDictionary = skus
 End Function
 
 ' Prompts the user to select an Excel workbook and opens this workbook.
@@ -175,10 +162,10 @@ Function retrieveOrder() As Map
             Dim boxLabel As String: boxLabel = CStr(.Cells(i, ORDER_BOX_LABEL_COLUMN).value)
             If boxLabel <> "" Then
                 Debug.Print (boxLabel)
-                Call mapKeyset.Add(boxLabel)
+                Call mapKeyset.add(boxLabel)
                 
                 Dim storedCollection As Collection: Set storedCollection = New Collection
-                Call mapKeyValues.Add(Item:=storedCollection, Key:=boxLabel)
+                Call mapKeyValues.add(Item:=storedCollection, key:=boxLabel)
 
                 prevBoxLabel = boxLabel
             End If
@@ -187,7 +174,7 @@ Function retrieveOrder() As Map
             Dim correspondingCount As Integer: correspondingCount = CInt(.Cells(i, ORDER_COUNT_COLUMN).value)
             If correspondingSku <> "" Then
                 If Not collectionContainsKey(correspondingSku, mapKeyValues(prevBoxLabel)) Then
-                    Call mapKeyValues(prevBoxLabel).Add(Item:=correspondingCount, Key:=correspondingSku)
+                    Call mapKeyValues(prevBoxLabel).add(Item:=correspondingCount, key:=correspondingSku)
                 Else
                     Debug.Print ("Duplicate key found")
                     
@@ -208,18 +195,18 @@ Sub FindDesiredValues()
     'Call SaveBeforeExecute
     Call validateWorkbook
     Application.ScreenUpdating = False 'Prevent new window from displaying
-    
+
     Dim desiredMap As Map
-    desiredMap = generateSkuDictionary()
-    
-    For Each Key In desiredMap.keyset
-        Debug.Print (desiredMap.keyValPairs(Key))
+    Set desiredMap = generateSkuDictionary()
+
+    For Each key In desiredMap.keyset
+        Debug.Print (desiredMap.retrieve(key))
     Next
 
-    orderFile = openDesiredFile()
-    orderWorksheet = Workbooks(orderFile).Sheets(1).Name
+    'orderFile = openDesiredFile()
+    'orderWorksheet = Workbooks(orderFile).Sheets(1).Name
 
-    Call retrieveOrder
+    'Call retrieveOrder
 
     Workbooks(ORIGIN_WORKBOOK_NAME).Activate 'Reset after each execution
 End Sub
