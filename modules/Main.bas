@@ -159,11 +159,7 @@ Function retrieveOrder() As Map
             Dim correspondingSku As String: correspondingSku = CStr(.Cells(i, ORDER_SKU_COLUMN).value)
             Dim correspondingCount As Integer: correspondingCount = CInt(.Cells(i, ORDER_COUNT_COLUMN).value)
             If correspondingSku <> "" Then
-                Debug.Print (returnVal.contains(prevBoxLabel))
-                'Dim retrievedMap As Variant: Set retrievedMap = returnVal.retrieve(prevBoxLabel)
-                Call returnVal.retrieve(prevBoxLabel)
-                'Debug.Print ("type " & TypeName(retrievedMap))
-                'Call retrievedMap.add(correspondingSku, correspondingCount)
+                Call returnVal.retrieve(prevBoxLabel).add(correspondingSku, correspondingCount)
                 Debug.Print (correspondingSku & ", " & correspondingCount)
             End If
 
@@ -181,17 +177,13 @@ Sub FindDesiredValues()
     Dim baseInventory As Map
     Set baseInventory = generateSkuDictionary()
 
-    For Each key In desiredMap.keyset
-        Debug.Print (desiredMap.retrieve(key))
+    For Each key In baseInventory.keyset
+        Debug.Print (baseInventory.retrieve(key))
     Next
 
     orderFile = openDesiredFile()
     orderWorksheet = Workbooks(orderFile).Sheets(1).Name
 
     Dim desiredGoods As Map
-    desiredGoods = retrieveOrder()
+    Set desiredGoods = retrieveOrder()
 End Sub
-
-
-
-
