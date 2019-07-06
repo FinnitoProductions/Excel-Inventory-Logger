@@ -149,6 +149,10 @@ Function retrieveOrder() As Map
     With Workbooks(orderFile).Worksheets(orderWorksheet)
         Dim prevBoxLabel As String: prevBoxLabel = ""
         For i = 2 To .Rows.Count
+            If WorksheetFunction.CountA(.Rows(i)) = 0 And WorksheetFunction.CountA(.Rows(i + 1)) = 0 Then
+                Exit For
+            End If
+
             Dim boxLabel As String: boxLabel = CStr(.Cells(i, ORDER_BOX_LABEL_COLUMN).value)
             If boxLabel <> "" Then
                 Call returnVal.add(boxLabel, New Map)
