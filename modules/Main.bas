@@ -4,10 +4,12 @@ Const ORIGIN_WORKSHEET_NAME As String = "Inventory"
 Const ORIGIN_SKU_COLUMN As Integer = 1
 Const ORIGIN_LOCATION_LETTER_COLUMN As Integer = 5
 Const ORIGIN_LOCATION_NUM_COLUMN As Integer = 6
+Const ORIGIN_BLANK_ROWS_TO_EXIT As Integer = 3
 
 Const ORDER_BOX_LABEL_COLUMN As Integer = 1
 Const ORDER_SKU_COLUMN As Integer = 2
 Const ORDER_COUNT_COLUMN As Integer = 4
+Const ORDER_BLANK_ROWS_TO_EXIT As Integer = 3
 
 Dim orderFile As String
 Dim orderWorksheet As String
@@ -19,7 +21,6 @@ Sub validateWorkbook()
     With Application.Workbooks
         For i = 1 To .Count
             If .Item(i).Name = ORIGIN_WORKBOOK_NAME Then
-                Debug.Print ("validated")
                 Exit Sub
             End If
         Next
@@ -93,7 +94,6 @@ Function isSku(potentialSku As String) As Boolean
         isSku = False
         Exit Function
     ElseIf arrLength = MAX_SKU_TOKENS Then
-        Debug.Print (TypeName(splitString(UBound(splitString))))
         isSku = isSize(splitString(UBound(splitString)))
     Else
         isSku = True
@@ -104,8 +104,19 @@ End Function
 ' its location in storage.
 Function generateSkuDictionary() As Map
     Dim skus As New Map
+    Dim numBlankRows As Integer: numBlankRows = 0
     With Workbooks(ORIGIN_WORKBOOK_NAME).Worksheets(ORIGIN_WORKSHEET_NAME)
         For i = 2 To Rows.Count
+            If WorksheetFunction.CountA(.Rows(i)) = 0 Then
+                numBlankRows = numBlankRows + 1
+            Else
+                numBlankRows = 0
+            End If
+
+            If numBlankRows > ORIGIN_BLANK_ROWS_TO_EXIT Then
+                Exit For
+            End If
+
             Dim skuVal As String
             skuVal = CStr(.Cells(i, ORIGIN_SKU_COLUMN).value)
             If skuVal <> "" Then
@@ -147,8 +158,16 @@ Function retrieveOrder() As Map
 
     With Workbooks(orderFile).Worksheets(orderWorksheet)
         Dim prevBoxLabel As String: prevBoxLabel = ""
+
+        Dim numBlankRows As Integer: numBlankRows = 0
         For i = 2 To .Rows.Count
-            If WorksheetFunction.CountA(.Rows(i)) = 0 And WorksheetFunction.CountA(.Rows(i + 1)) = 0 Then
+            If WorksheetFunction.CountA(.Rows(i)) = 0 Then
+                numBlankRows = numBlankRows + 1
+            Else
+                numBlankRows = 0
+            End If
+
+            If numBlankRows > ORDER_BLANK_ROWS_TO_EXIT Then
                 Exit For
             End If
 
@@ -163,7 +182,6 @@ Function retrieveOrder() As Map
             If correspondingSku <> "" And strCorrespondingCount <> "" Then
                 Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
                 Call returnVal.retrieve(prevBoxLabel).add(correspondingSku, intCorrespondingCount)
-                Debug.Print (correspondingSku & ", " & intCorrespondingCount)
             End If
             
             If returnVal.contains(prevBoxLabel) Then
@@ -178,16 +196,13 @@ Function retrieveOrder() As Map
 End Function
 
 Sub FindDesiredValues()
-    ' 'Call SaveBeforeExecute
-    ' Call validateWorkbook
-    ' Application.ScreenUpdating = False 'Prevent new window from displaying
+    'Call SaveBeforeExecute
+    Call validateWorkbook
+    Application.ScreenUpdating = False 'Prevent new window from displaying
 
-    ' Dim baseInventory As Map
-    ' Set baseInventory = generateSkuDictionary()
-
-    ' For Each key In baseInventory.keyset
-    '     Debug.Print (baseInventory.retrieve(key))
-    ' Next
+    Dim baseInventory As Map
+    Set baseInventory = generateSkuDictionary()
+    Debug.Print (baseInventory.size())
 
     orderFile = openDesiredFile()
     orderWorksheet = Workbooks(orderFile).Sheets(1).Name
