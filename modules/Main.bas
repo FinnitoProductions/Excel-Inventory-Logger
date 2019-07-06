@@ -96,7 +96,9 @@ Function retrieveOrder(masterInventory As Map) As Map
                 
                 Dim desiredShelfItem As New ShelfItem
                 Dim shelfLocation As String: shelfLocation = masterInventory.retrieve(correspondingSku)
-                Call desiredShelfItem.InitiateProperties(correspondingSku, desiredCount:=intCorrespondingCount)
+                Call desiredShelfItem.InitiateProperties(correspondingSku, _
+                                                         desiredCount:=intCorrespondingCount, _ 
+                                                         desiredLocation:= shelfLocation)
                 
                 Call returnVal.retrieve(prevBoxLabel).add(desiredShelfItem)
             End If
@@ -125,6 +127,11 @@ Sub FindDesiredValues()
     orderWorksheet = Workbooks(orderFile).Sheets(1).Name
 
     Dim desiredGoods As Map
-    Set desiredGoods = retrieveOrder()
+    Set desiredGoods = retrieveOrder(baseInventory)
     Debug.Print (desiredGoods.size())
+
+    Dim boxLabel As Variant
+    For Each boxLabel In desiredGoods.keyset
+        Debug.Print(desiredGoods.retrieve(boxLabel).toString())
+    Next boxLabel
 End Sub

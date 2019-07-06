@@ -4,8 +4,12 @@ Public sku As String
 Public location As String
 Public count As Integer
 
-Public Sub initiateProperties(desiredSku As String, Optional desiredCount As Integer = 0, Optional desiredLoc As String = "")
+Public Sub initiateProperties(desiredSku As String, Optional desiredCount As Integer = 0, Optional desiredLocation As String = "")
    sku = desiredSku
    count = desiredCount
-   location = desiredLoc
+   location = desiredLocation
 End Sub
+
+Public Function toString() As String
+   toString = sku & ": " & count & " items stored at " & location
+End Function
