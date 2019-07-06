@@ -14,7 +14,7 @@ End Sub
 ' Extracts the filename given an absolute directory path.
 Function getWorksheetFromPath(path As String) As String
     Dim splitString() As String
-    splitString = Split(path, "/")
+    splitString = Split(path, Application.PathSeparator)
     
     getWorksheetFromPath = splitString(UBound(splitString))
 End Function
