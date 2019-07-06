@@ -7,7 +7,7 @@ Const ORIGIN_LOCATION_NUM_COLUMN As Integer = 6
 
 Const ORDER_BOX_LABEL_COLUMN As Integer = 1
 Const ORDER_SKU_COLUMN As Integer = 2
-Const ORDER_COUNT_COLUMN As Integer = 3
+Const ORDER_COUNT_COLUMN As Integer = 4
 
 Dim orderFile As String
 Dim orderWorksheet As String
@@ -151,20 +151,23 @@ Function retrieveOrder() As Map
         For i = 2 To .Rows.Count
             Dim boxLabel As String: boxLabel = CStr(.Cells(i, ORDER_BOX_LABEL_COLUMN).value)
             If boxLabel <> "" Then
-                Dim storedMap As Map: Set storedMap = New Map
-                Call returnVal.add(boxLabel, storedMap)
+                Call returnVal.add(boxLabel, New Map)
                 prevBoxLabel = boxLabel
             End If
 
             Dim correspondingSku As String: correspondingSku = CStr(.Cells(i, ORDER_SKU_COLUMN).value)
             Dim strCorrespondingCount As String: strCorrespondingCount = CStr(.Cells(i, ORDER_COUNT_COLUMN).value)
             If correspondingSku <> "" And strCorrespondingCount <> "" Then
-                Debug.Print (strCorrespondingCount)
                 Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
                 Call returnVal.retrieve(prevBoxLabel).add(correspondingSku, intCorrespondingCount)
                 Debug.Print (correspondingSku & ", " & intCorrespondingCount)
             End If
-
+            
+            If returnVal.contains(prevBoxLabel) Then
+                If returnVal.retrieve(prevBoxLabel).size() = 0 Then
+                    returnVal.remove (prevBoxLabel)
+                End If
+            End If
         Next
     End With
 
@@ -172,23 +175,25 @@ Function retrieveOrder() As Map
 End Function
 
 Sub FindDesiredValues()
-    'Call SaveBeforeExecute
-    Call validateWorkbook
-    Application.ScreenUpdating = False 'Prevent new window from displaying
+    ' 'Call SaveBeforeExecute
+    ' Call validateWorkbook
+    ' Application.ScreenUpdating = False 'Prevent new window from displaying
 
-    Dim baseInventory As Map
-    Set baseInventory = generateSkuDictionary()
+    ' Dim baseInventory As Map
+    ' Set baseInventory = generateSkuDictionary()
 
-    For Each key In baseInventory.keyset
-        Debug.Print (baseInventory.retrieve(key))
-    Next
+    ' For Each key In baseInventory.keyset
+    '     Debug.Print (baseInventory.retrieve(key))
+    ' Next
 
     orderFile = openDesiredFile()
     orderWorksheet = Workbooks(orderFile).Sheets(1).Name
 
     Dim desiredGoods As Map
     Set desiredGoods = retrieveOrder()
+    Debug.Print (desiredGoods.size())
 End Sub
+
 
 
 
