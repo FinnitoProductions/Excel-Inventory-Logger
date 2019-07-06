@@ -94,12 +94,12 @@ Function retrieveOrder(masterInventory As Map) As Map
             If correspondingSku <> "" And strCorrespondingCount <> "" Then
                 Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
                 
-                Dim desiredShelfItem As New ShelfItem
+                Dim desiredShelfItem As shelfItem: Set desiredShelfItem = New shelfItem
                 Dim shelfLocation As String: shelfLocation = masterInventory.retrieve(correspondingSku)
-                Call desiredShelfItem.InitiateProperties(correspondingSku, _
-                                                         desiredCount:=intCorrespondingCount, _ 
-                                                         desiredLocation:= shelfLocation)
-                
+                Call desiredShelfItem.initiateProperties(correspondingSku, _
+                                                         desiredCount:=intCorrespondingCount, _
+                                                         desiredLocation:=shelfLocation)
+
                 Call returnVal.retrieve(prevBoxLabel).add(desiredShelfItem)
             End If
             
@@ -129,9 +129,6 @@ Sub FindDesiredValues()
     Dim desiredGoods As Map
     Set desiredGoods = retrieveOrder(baseInventory)
     Debug.Print (desiredGoods.size())
-
-    Dim boxLabel As Variant
-    For Each boxLabel In desiredGoods.keyset
-        Debug.Print(desiredGoods.retrieve(boxLabel).toString())
-    Next boxLabel
 End Sub
+
+
