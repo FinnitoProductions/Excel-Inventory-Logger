@@ -64,7 +64,7 @@ Function generateSkuDictionary() As Map
     Set generateSkuDictionary = skus
 End Function
 
-Function retrieveOrder() As Map
+Function retrieveOrder(masterInventory As Map) As Map
     Dim returnVal As New Map
 
     With Workbooks(orderFile).Worksheets(orderWorksheet)
@@ -95,6 +95,7 @@ Function retrieveOrder() As Map
                 Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
                 
                 Dim desiredShelfItem As New ShelfItem
+                Dim shelfLocation As String: shelfLocation = masterInventory.retrieve(correspondingSku)
                 Call desiredShelfItem.InitiateProperties(correspondingSku, desiredCount:=intCorrespondingCount)
                 
                 Call returnVal.retrieve(prevBoxLabel).add(desiredShelfItem)
