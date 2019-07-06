@@ -104,19 +104,18 @@ End Function
 ' its location in storage.
 Function generateSkuDictionary() As Map
     Dim skus As New Map
-    
-    For i = 2 To Rows.Count
-        Dim skuVal As String
-        skuVal = CStr(Cells(i, ORIGIN_SKU_COLUMN).value)
-        If skuVal <> "" Then
-            Dim location As String
-            With Workbooks(ORIGIN_WORKBOOK_NAME).Worksheets(ORIGIN_WORKSHEET_NAME)
+    With Workbooks(ORIGIN_WORKBOOK_NAME).Worksheets(ORIGIN_WORKSHEET_NAME)
+        For i = 2 To Rows.Count
+            Dim skuVal As String
+            skuVal = CStr(.Cells(i, ORIGIN_SKU_COLUMN).value)
+            If skuVal <> "" Then
+                Dim location As String
                 location = CStr(.Cells(i, ORIGIN_LOCATION_LETTER_COLUMN).value) & CStr(.Cells(i, ORIGIN_LOCATION_NUM_COLUMN).value)
-            End With
 
-            Call skus.add(skuVal, location)
-        End If
-    Next
+                Call skus.add(skuVal, location)
+            End If
+        Next
+    End With
 
     Set generateSkuDictionary = skus
 End Function
