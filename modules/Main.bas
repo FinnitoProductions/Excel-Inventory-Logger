@@ -1,3 +1,5 @@
+Option Explicit
+
 Const ORIGIN_WORKBOOK_NAME As String = "harker inventory.xlsm"
 Const ORIGIN_WORKSHEET_NAME As String = "Inventory"
 
@@ -19,6 +21,7 @@ Dim orderWorksheet As String
 ' before reexcuting the code and terminates the program.
 Sub validateWorkbook()
     With Application.Workbooks
+        Dim i As Long
         For i = 1 To .Count
             If .Item(i).Name = ORIGIN_WORKBOOK_NAME Then
                 Exit Sub
@@ -106,6 +109,7 @@ Function generateSkuDictionary() As Map
     Dim skus As New Map
     Dim numBlankRows As Integer: numBlankRows = 0
     With Workbooks(ORIGIN_WORKBOOK_NAME).Worksheets(ORIGIN_WORKSHEET_NAME)
+        Dim i As Long
         For i = 2 To Rows.Count
             If WorksheetFunction.CountA(.Rows(i)) = 0 Then
                 numBlankRows = numBlankRows + 1
@@ -160,6 +164,7 @@ Function retrieveOrder() As Map
         Dim prevBoxLabel As String: prevBoxLabel = ""
 
         Dim numBlankRows As Integer: numBlankRows = 0
+        Dim i As Long
         For i = 2 To .Rows.Count
             If WorksheetFunction.CountA(.Rows(i)) = 0 Then
                 numBlankRows = numBlankRows + 1
