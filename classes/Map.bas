@@ -1,7 +1,7 @@
 ' 
 ' This Map class simulates a map/dictionary. Although Collections support the addition of key-value pairs,
-' the list of keys cannot be iterated over (only the values), so keeps track of a separate keyset for convenient key-value
-' iteration.
+' the list of keys cannot be iterated over (only the values), so this Map class keeps track of a separate keyset for convenient 
+' key-value iteration.
 '
 ' Finn Frankis
 ' July 4, 2019
