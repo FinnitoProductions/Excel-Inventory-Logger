@@ -115,23 +115,24 @@ Function retrieveOrder(masterInventory As Map) As Map
 End Function
 Sub writeDataToFile(data As Map)
     Const FILE_NAME As String = "orderData.txt"
-    Const FILE_PATH As String = Application.DefaultFilePath & Application.PathSeparator & FILE_NAME
-
-    Open FILE_PATH For Output As storedFile
+    Dim filePath As String: filePath = Application.DefaultFilePath & FILE_NAME
+    
+    Open filePath For Output As #1
 
     Dim boxLabel As Variant
-    For Each boxLabel In desiredGoods.keyset
-        Write storedFile, boxLabel
-        Dim shelfItems As Collection: Set shelfItems = desiredGoods.retrieve(boxLabel)
+    For Each boxLabel In data.keyset
+        Print #1, boxLabel
+        Dim shelfItems As Collection: Set shelfItems = data.retrieve(boxLabel)
         Dim shelfItem As Variant
         For Each shelfItem In shelfItems
-            Write storedFile, shelfItem.toString()
+            Print #1, shelfItem.toString()
         Next shelfItem
-        Write storedFile, vbCrLf ' Print new line
+        Print #1, vbCrLf ' Print new line
     Next boxLabel
 
-    Close storedFile
+    Close #1
 End Sub
+
 Sub FindDesiredValues()
     'Call SaveBeforeExecute
     Call validateWorkbook
@@ -148,7 +149,5 @@ Sub FindDesiredValues()
     Set desiredGoods = retrieveOrder(baseInventory)
     Debug.Print (desiredGoods.size())
 
-    writeDataToFile(desiredGoods)
+    Call writeDataToFile(desiredGoods)
 End Sub
-
-
