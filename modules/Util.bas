@@ -1,3 +1,10 @@
+'
+' Contains several valuable utility functions which can be used across several projects.
+'
+' Finn Frankis
+' July 5, 2019
+'
+
 Option Explicit
 
 ' Offers to save the workbook before the macro is executed to allow the macro's actions to be easily undone (Excel does not

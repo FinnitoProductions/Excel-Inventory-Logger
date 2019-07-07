@@ -1,3 +1,12 @@
+'
+' Contains all the functions and subroutines specific to the execution of the inventory logging project.
+' First validates the workbook, then generates a dictioanry using the master ("origin") SKU list, then
+' retrieves a given order (as selected by the user) and matches each item to its location. Concludes by writing
+' the data to a printable file and deducting the desired amount from the inventory.
+'
+' Finn Frankis
+' July 2, 2019
+'
 Option Explicit
 
 Const ORIGIN_WORKBOOK_NAME As String = "harker inventory.xlsm"
@@ -113,6 +122,7 @@ Function retrieveOrder(masterInventory As Map) As Map
 
     Set retrieveOrder = returnVal
 End Function
+
 Sub writeDataToFile(data As Map)
     Const FILE_NAME As String = "orderData.txt"
     Dim filePath As String: filePath = Application.DefaultFilePath & FILE_NAME

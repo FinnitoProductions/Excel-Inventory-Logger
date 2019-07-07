@@ -1,5 +1,10 @@
+'
 ' Represents an item stored on a shelf. Can be used to represent an item which was ordered or an item which is currently
 ' in inventory.
+'
+' Finn Frankis
+' July 6, 2019
+'
 Public sku As String
 Public location As String
 Public count As Integer
