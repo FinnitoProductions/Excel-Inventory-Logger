@@ -13,8 +13,8 @@ Const ORIGIN_WORKBOOK_NAME As String = "harker inventory.xlsm"
 Const ORIGIN_WORKSHEET_NAME As String = "Inventory"
 
 Const ORIGIN_SKU_COLUMN As Integer = 1
-Const ORIGIN_LOCATION_LETTER_COLUMN As Integer = 5
-Const ORIGIN_LOCATION_NUM_COLUMN As Integer = 6
+Const ORIGIN_LOCATION_LETTER_COLUMN As Integer = 4
+Const ORIGIN_LOCATION_NUM_COLUMN As Integer = 5
 Const ORIGIN_BLANK_ROWS_TO_EXIT As Integer = 3
 
 Const ORDER_BOX_LABEL_COLUMN As Integer = 1
@@ -164,6 +164,7 @@ End Sub
 
 Sub GenerateInventorySpreadsheet()
     Application.ScreenUpdating = False 'Prevent new window from displaying
+    ActiveWindow.DisplayGridlines = False
     
     Dim currentDate As String: currentDate = CStr(Date)
     currentDate = Replace(currentDate, "/", "-")
@@ -174,6 +175,10 @@ Sub GenerateInventorySpreadsheet()
     With newWorkbook
         Call .SaveAs(fileName:=NEW_FILE_LOC)
         Call Workbooks(ORIGIN_WORKBOOK_NAME).Sheets(ORIGIN_WORKSHEET_NAME).Copy(Before:=newWorkbook.Sheets(1))
+        Dim range As range: Set range = .Sheets(1).range("A1:K500")
+        
+        .Sheets(1).Columns(ORIGIN_LOCATION_NUM_COLUMN).EntireColumn.Delete
+        .Sheets(1).Columns(ORIGIN_LOCATION_LETTER_COLUMN).EntireColumn.Delete
     End With
     Call newWorkbook.Close(SaveChanges:=True)
 End Sub
