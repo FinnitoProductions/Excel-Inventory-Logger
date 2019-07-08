@@ -101,6 +101,12 @@ Function retrieveOrder(orderWorksheet As Worksheet) As Map
 
             Dim boxLabel As String: boxLabel = CStr(.Cells(i, ORDER_BOX_LABEL_COLUMN).value)
             If boxLabel <> "" Then
+                If returnVal.contains(prevBoxLabel) Then
+                    Debug.Print ("removing " & prevBoxLabel)
+                    If returnVal.retrieve(prevBoxLabel).count = 0 Then
+                        returnVal.remove (prevBoxLabel)
+                    End If
+                End If
                 Call returnVal.add(boxLabel, New Collection)
                 prevBoxLabel = boxLabel
             End If
@@ -113,14 +119,8 @@ Function retrieveOrder(orderWorksheet As Worksheet) As Map
                 Dim desiredShelfItem As shelfItem: Set desiredShelfItem = New shelfItem
                 Call desiredShelfItem.initiateProperties(correspondingSku, _
                                                          desiredCount:=intCorrespondingCount)
-
+                                                         
                 Call returnVal.retrieve(prevBoxLabel).add(desiredShelfItem)
-            End If
-            
-            If returnVal.contains(prevBoxLabel) Then
-                If returnVal.retrieve(prevBoxLabel).count = 0 Then
-                    returnVal.remove (prevBoxLabel)
-                End If
             End If
         Next
     End With
