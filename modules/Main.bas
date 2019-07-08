@@ -16,6 +16,7 @@ Const ORIGIN_SKU_COLUMN As Integer = 1
 Const ORIGIN_LOCATION_LETTER_COLUMN As Integer = 4
 Const ORIGIN_LOCATION_NUM_COLUMN As Integer = 5
 Const ORIGIN_BLANK_ROWS_TO_EXIT As Integer = 3
+Const ORIGIN_COUNT_COLUMN As Integer = 3
 
 Const ORDER_BOX_LABEL_COLUMN As Integer = 1
 Const ORDER_SKU_COLUMN As Integer = 2
@@ -64,8 +65,14 @@ Function generateSkuDictionary() As Map
                 Dim location As String
                 location = CStr(.Cells(i, ORIGIN_LOCATION_LETTER_COLUMN).value) _
                 & CStr(.Cells(i, ORIGIN_LOCATION_NUM_COLUMN).value)
+                
+                Dim desiredShelfItem As shelfItem: Set desiredShelfItem = New shelfItem
+                Call desiredShelfItem.initiateProperties(skuVal, _
+                    desiredLocation:=location, _
+                    desiredExcelRow:=i)
+                    
+                Call skus.add(skuVal, desiredShelfItem)
 
-                Call skus.add(skuVal, location)
             End If
         Next
     End With
@@ -73,10 +80,10 @@ Function generateSkuDictionary() As Map
     Set generateSkuDictionary = skus
 End Function
 
-Function retrieveOrder(masterInventory As Map) As Map
+Function retrieveOrder(orderWorksheet As Worksheet) As Map
     Dim returnVal As New Map
 
-    With Workbooks(orderFile).Worksheets(orderWorksheet)
+    With orderWorksheet
         Dim prevBoxLabel As String: prevBoxLabel = ""
 
         Dim numBlankRows As Integer: numBlankRows = 0
@@ -104,10 +111,8 @@ Function retrieveOrder(masterInventory As Map) As Map
                 Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
                 
                 Dim desiredShelfItem As shelfItem: Set desiredShelfItem = New shelfItem
-                Dim shelfLocation As String: shelfLocation = masterInventory.retrieve(correspondingSku)
                 Call desiredShelfItem.initiateProperties(correspondingSku, _
-                                                         desiredCount:=intCorrespondingCount, _
-                                                         desiredLocation:=shelfLocation)
+                                                         desiredCount:=intCorrespondingCount)
 
                 Call returnVal.retrieve(prevBoxLabel).add(desiredShelfItem)
             End If
@@ -122,6 +127,24 @@ Function retrieveOrder(masterInventory As Map) As Map
 
     Set retrieveOrder = returnVal
 End Function
+
+Sub deductInventory(masterInventoryDict As Map, orderDict As Map)
+    Dim boxLabel As Variant
+    For Each boxLabel In orderDict.keyset
+        Dim shelfItems As Collection: Set shelfItems = orderDict.retrieve(boxLabel)
+        Dim shelfItem As Variant
+        For Each shelfItem In shelfItems
+            If masterInventoryDict.contains(shelfItem.sku) Then
+                Dim correspondingItem As shelfItem: Set correspondingItem = masterInventoryDict.retrieve(shelfItem.sku)
+                With Workbooks(ORIGIN_WORKBOOK_NAME).Sheets(ORIGIN_WORKSHEET_NAME)
+                    .Cells(correspondingItem.excelRow, ORIGIN_COUNT_COLUMN).value = .Cells(correspondingItem.excelRow, ORIGIN_COUNT_COLUMN).value - shelfItem.count
+                End With
+            Else
+                Debug.Print ("Sku " & shelfItem.sku & " not contained in master inventory.")
+            End If
+        Next shelfItem
+    Next boxLabel
+End Sub
 
 Sub writeDataToFile(data As Map)
     Const FILE_NAME As String = "orderData.txt"
@@ -144,7 +167,7 @@ Sub writeDataToFile(data As Map)
 End Sub
 
 Sub FindDesiredValues()
-    'Call SaveBeforeExecute
+    Call SaveBeforeExecute
     Call validateWorkbook
     Application.ScreenUpdating = False 'Prevent new window from displaying
 
@@ -156,10 +179,12 @@ Sub FindDesiredValues()
     orderWorksheet = Workbooks(orderFile).Sheets(1).Name
 
     Dim desiredGoods As Map
-    Set desiredGoods = retrieveOrder(baseInventory)
+    Set desiredGoods = retrieveOrder(Workbooks(orderFile).Worksheets(orderWorksheet))
     Debug.Print (desiredGoods.size())
 
     Call writeDataToFile(desiredGoods)
+    
+    Call deductInventory(baseInventory, desiredGoods)
 End Sub
 
 Sub GenerateInventorySpreadsheet()
@@ -175,7 +200,6 @@ Sub GenerateInventorySpreadsheet()
     With newWorkbook
         Call .SaveAs(fileName:=NEW_FILE_LOC)
         Call Workbooks(ORIGIN_WORKBOOK_NAME).Sheets(ORIGIN_WORKSHEET_NAME).Copy(Before:=newWorkbook.Sheets(1))
-        Dim range As range: Set range = .Sheets(1).range("A1:K500")
         
         .Sheets(1).Columns(ORIGIN_LOCATION_NUM_COLUMN).EntireColumn.Delete
         .Sheets(1).Columns(ORIGIN_LOCATION_LETTER_COLUMN).EntireColumn.Delete
