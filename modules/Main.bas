@@ -161,3 +161,19 @@ Sub FindDesiredValues()
 
     Call writeDataToFile(desiredGoods)
 End Sub
+
+Sub GenerateInventorySpreadsheet()
+    Application.ScreenUpdating = False 'Prevent new window from displaying
+    
+    Dim currentDate As String: currentDate = CStr(Date)
+    currentDate = Replace(currentDate, "/", "-")
+    Dim NEW_FILE_NAME As String: NEW_FILE_NAME = "inventory-" & currentDate & ".xlsx"
+    Dim NEW_FILE_LOC As String: NEW_FILE_LOC = Application.DefaultFilePath & NEW_FILE_NAME
+
+    Dim newWorkbook As Workbook: Set newWorkbook = Workbooks.add
+    With newWorkbook
+        Call .SaveAs(fileName:=NEW_FILE_LOC)
+        Call Workbooks(ORIGIN_WORKBOOK_NAME).Sheets(ORIGIN_WORKSHEET_NAME).Copy(Before:=newWorkbook.Sheets(1))
+    End With
+    Call newWorkbook.Close(SaveChanges:=True)
+End Sub
