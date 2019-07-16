@@ -80,7 +80,7 @@ Function generateSkuDictionary() As Map
     Set generateSkuDictionary = skus
 End Function
 
-Function retrieveOrder(orderWorksheet As Worksheet) As Map
+Function retrieveOrder(orderWorksheet As Worksheet, masterInventory As Map) As Map
     Dim returnVal As New Map
 
     With orderWorksheet
@@ -102,7 +102,6 @@ Function retrieveOrder(orderWorksheet As Worksheet) As Map
             Dim boxLabel As String: boxLabel = CStr(.Cells(i, ORDER_BOX_LABEL_COLUMN).value)
             If boxLabel <> "" Then
                 If returnVal.contains(prevBoxLabel) Then
-                    Debug.Print ("removing " & prevBoxLabel)
                     If returnVal.retrieve(prevBoxLabel).count = 0 Then
                         returnVal.remove (prevBoxLabel)
                     End If
@@ -117,8 +116,11 @@ Function retrieveOrder(orderWorksheet As Worksheet) As Map
                 Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
                 
                 Dim desiredShelfItem As shelfItem: Set desiredShelfItem = New shelfItem
+                Dim shelfLocation As String: shelfLocation = masterInventory.retrieve(correspondingSku).location
+
                 Call desiredShelfItem.initiateProperties(correspondingSku, _
-                                                         desiredCount:=intCorrespondingCount)
+                                                         desiredCount:=intCorrespondingCount, _
+                                                         desiredLocation:=shelfLocation)
                                                          
                 Call returnVal.retrieve(prevBoxLabel).add(desiredShelfItem)
             End If
@@ -173,18 +175,16 @@ Sub FindDesiredValues()
 
     Dim baseInventory As Map
     Set baseInventory = generateSkuDictionary()
-    Debug.Print (baseInventory.size())
 
     orderFile = openDesiredFile()
     orderWorksheet = Workbooks(orderFile).Sheets(1).Name
 
     Dim desiredGoods As Map
-    Set desiredGoods = retrieveOrder(Workbooks(orderFile).Worksheets(orderWorksheet))
-    Debug.Print (desiredGoods.size())
+    Set desiredGoods = retrieveOrder(Workbooks(orderFile).Worksheets(orderWorksheet), baseInventory)
 
     Call writeDataToFile(desiredGoods)
     
-    Call deductInventory(baseInventory, desiredGoods)
+    'Call deductInventory(baseInventory, desiredGoods)
 End Sub
 
 Sub GenerateInventorySpreadsheet()
