@@ -66,9 +66,13 @@ Function generateSkuDictionary() As Map
                 location = CStr(.Cells(i, ORIGIN_LOCATION_LETTER_COLUMN).value) _
                 & CStr(.Cells(i, ORIGIN_LOCATION_NUM_COLUMN).value)
                 
+                Dim count As Long
+                count = CInt(.Cells(i, ORIGIN_COUNT_COLUMN).value)
+                
                 Dim desiredShelfItem As shelfItem: Set desiredShelfItem = New shelfItem
                 Call desiredShelfItem.initiateProperties(skuVal, _
                     desiredLocation:=location, _
+                    desiredAvailableCount:=count, _
                     desiredExcelRow:=i)
                     
                 Call skus.add(skuVal, desiredShelfItem)
@@ -116,11 +120,12 @@ Function retrieveOrder(orderWorksheet As Worksheet, masterInventory As Map) As M
                 Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
                 
                 Dim desiredShelfItem As shelfItem: Set desiredShelfItem = New shelfItem
-                Dim shelfLocation As String: shelfLocation = masterInventory.retrieve(correspondingSku).location
+                Dim correspondingItem As shelfItem: Set correspondingItem = masterInventory.retrieve(correspondingSku)
 
                 Call desiredShelfItem.initiateProperties(correspondingSku, _
                                                          desiredCount:=intCorrespondingCount, _
-                                                         desiredLocation:=shelfLocation)
+                                                         desiredLocation:=correspondingItem.location, _
+                                                         desiredAvailableCount:=correspondingItem.availableCount)
                                                          
                 Call returnVal.retrieve(prevBoxLabel).add(desiredShelfItem)
             End If
