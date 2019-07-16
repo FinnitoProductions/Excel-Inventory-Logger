@@ -125,6 +125,12 @@ Function retrieveOrder(orderWorksheet As Worksheet, masterInventory As Map) As M
                 Call returnVal.retrieve(prevBoxLabel).add(desiredShelfItem)
             End If
         Next
+
+        If returnVal.contains(prevBoxLabel) Then
+            If returnVal.retrieve(prevBoxLabel).count = 0 Then
+                returnVal.remove (prevBoxLabel)
+            End If
+        End If
     End With
 
     Set retrieveOrder = returnVal
