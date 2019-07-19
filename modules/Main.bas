@@ -23,6 +23,9 @@ Const ORDER_SKU_COLUMN As Integer = 2
 Const ORDER_COUNT_COLUMN As Integer = 4
 Const ORDER_BLANK_ROWS_TO_EXIT As Integer = 3
 
+Const ORDER_DELIVERY_COST As Double = 50
+Const COST_PER_ITEM As Double = 0.6
+
 Dim orderFile As String
 Dim orderWorksheet As String
 
@@ -159,13 +162,35 @@ Sub deductInventory(masterInventoryDict As Map, orderDict As Map)
     Next boxLabel
 End Sub
 
+Function computeCost(data As Map) As Double
+    Dim totalCost As Double: totalCost = ORDER_DELIVERY_COST
+
+    Dim boxLabel As Variant
+    For Each boxLabel In data.keyset
+        Dim shelfItems As Collection: Set shelfItems = data.retrieve(boxLabel)
+        Dim shelfItem As Variant
+        
+        Dim totalCount As Integer: totalCount = 0
+        For Each shelfItem In shelfItems
+            totalCount = totalCount + shelfItem.count
+        Next shelfItem
+
+        totalCost = totalCost + totalCount * COST_PER_ITEM
+    Next boxLabel
+
+    computeCost = totalCost
+End Function
+
 Sub writeDataToFile(data As Map)
     Const FILE_NAME As String = "orderData.txt"
     Dim filePath As String: filePath = Application.DefaultFilePath & FILE_NAME
     
+    Dim totalCost As Double: totalCost = computeCost(data)
+    
     Open filePath For Output As #1
 
     Dim boxLabel As Variant
+    Print #1, "Order " & CStr(Date) & ": $" & CStr(totalCost) & vbCrLf & vbCrLf
     For Each boxLabel In data.keyset
         Print #1, boxLabel
         Dim shelfItems As Collection: Set shelfItems = data.retrieve(boxLabel)
