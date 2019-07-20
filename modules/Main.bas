@@ -129,7 +129,12 @@ Function retrieveOrder(orderWorksheet As Worksheet, masterInventory As Map) As M
                     .Cells(i, ORDER_COUNT_COLUMN).value = correspondingItem.availableCount ' Replace "All" with the true number
                 End If
                 
-                Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
+                Dim intCorrespondingCount As Integer
+                If IsNumeric(strCorrespondingCount) Then
+                    intCorrespondingCount = CInt(strCorrespondingCount)
+                Else
+                    MsgBox ("""" & strCorrespondingCount & """" & " is invalid. Must be a nonnegative integer or ""All"".")
+                End If
                 
                 Dim desiredShelfItem As shelfItem: Set desiredShelfItem = New shelfItem
                 Call desiredShelfItem.initiateProperties(correspondingSku, _
