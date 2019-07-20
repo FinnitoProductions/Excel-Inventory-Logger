@@ -26,6 +26,8 @@ Const ORDER_BLANK_ROWS_TO_EXIT As Integer = 3
 Const ORDER_DELIVERY_COST As Double = 50
 Const COST_PER_ITEM As Double = 0.6
 
+Const REQUEST_ALL_ITEMS As String = "All"
+
 Dim orderFile As String
 Dim orderWorksheet As String
 
@@ -96,7 +98,7 @@ Function retrieveOrder(orderWorksheet As Worksheet, masterInventory As Map) As M
         Dim numBlankRows As Integer: numBlankRows = 0
         Dim i As Long
         For i = 2 To .Rows.count
-            If WorksheetFunction.CountA(.Rows(i)) = 0 Then
+            If WorksheetFunction.CountA(.Rows(i)) = 0 Then ' Blank row
                 numBlankRows = numBlankRows + 1
             Else
                 numBlankRows = 0
@@ -120,11 +122,16 @@ Function retrieveOrder(orderWorksheet As Worksheet, masterInventory As Map) As M
             Dim correspondingSku As String: correspondingSku = CStr(.Cells(i, ORDER_SKU_COLUMN).value)
             Dim strCorrespondingCount As String: strCorrespondingCount = CStr(.Cells(i, ORDER_COUNT_COLUMN).value)
             If correspondingSku <> "" And strCorrespondingCount <> "" Then
+                Dim correspondingItem As shelfItem: Set correspondingItem = masterInventory.retrieve(correspondingSku)
+            
+                If LCase(strCorrespondingCount) = LCase(REQUEST_ALL_ITEMS) Then
+                    strCorrespondingCount = CStr(correspondingItem.availableCount) ' All items desired
+                    .Cells(i, ORDER_COUNT_COLUMN).value = correspondingItem.availableCount ' Replace "All" with the true number
+                End If
+                
                 Dim intCorrespondingCount As Integer: intCorrespondingCount = CInt(strCorrespondingCount)
                 
                 Dim desiredShelfItem As shelfItem: Set desiredShelfItem = New shelfItem
-                Dim correspondingItem As shelfItem: Set correspondingItem = masterInventory.retrieve(correspondingSku)
-
                 Call desiredShelfItem.initiateProperties(correspondingSku, _
                                                          desiredCount:=intCorrespondingCount, _
                                                          desiredLocation:=correspondingItem.location, _
@@ -152,8 +159,9 @@ Sub deductInventory(masterInventoryDict As Map, orderDict As Map)
         For Each shelfItem In shelfItems
             If masterInventoryDict.contains(shelfItem.sku) Then
                 Dim correspondingItem As shelfItem: Set correspondingItem = masterInventoryDict.retrieve(shelfItem.sku)
-                With Workbooks(ORIGIN_WORKBOOK_NAME).Sheets(ORIGIN_WORKSHEET_NAME)
-                    .Cells(correspondingItem.excelRow, ORIGIN_COUNT_COLUMN).value = .Cells(correspondingItem.excelRow, ORIGIN_COUNT_COLUMN).value - shelfItem.count
+                With Workbooks(ORIGIN_WORKBOOK_NAME).Sheets(ORIGIN_WORKSHEET_NAME).Cells(correspondingItem.excelRow, ORIGIN_COUNT_COLUMN)
+                    Debug.Print ("Sku " & shelfItem.sku & " reduced from " & .value & " to " & .value - shelfItem.count)
+                    .value = .value - shelfItem.count
                 End With
             Else
                 Debug.Print ("Sku " & shelfItem.sku & " not contained in master inventory.")
